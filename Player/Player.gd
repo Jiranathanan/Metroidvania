@@ -1,5 +1,7 @@
 extends KinematicBody2D
 
+const DustEffect = preload("res://Effects/DustEffect.tscn")
+
 export (int) var ACCELERATION = 512
 export (int) var MAX_SPEED = 64
 export (float) var FRICTION = 0.25
@@ -26,6 +28,13 @@ func _physics_process(delta):
 	apply_gravity(delta)
 	update_animations(input_vector)
 	move()
+	
+func create_dust_effect():
+	var dust_position = global_position
+	dust_position.x += rand_range(-4, 4)
+	var dustEffect = DustEffect.instance()
+	get_tree().current_scene.add_child(dustEffect)
+	dustEffect.global_position = dust_position
 
 func get_input_vector():
 	var input_vector = Vector2.ZERO
@@ -82,11 +91,13 @@ func move():
 	# landing
 	if was_in_air and is_on_floor():
 		motion.x = last_motion.x
+		create_dust_effect()
 		
 	# just left ground
 	if was_on_floor and not is_on_floor() and not just_jumped:
 		motion.y = 0
 		position.y = last_position.y
+		coyoteJumpTimer.start()
 						
 	# Prevent Sliding (hack)
 	if is_on_floor() and get_floor_velocity().length() == 0 and abs(motion.x) < 1:
